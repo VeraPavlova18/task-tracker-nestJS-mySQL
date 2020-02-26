@@ -58,8 +58,15 @@ export class TasksService {
     updateTaskDto: UpdateTaskDto,
     user: User,
   ): Promise<Task> {
-    const { title, description, status } = updateTaskDto;
+    const { title, description, status, assigneeId } = updateTaskDto;
     const task = await this.getTaskById(id, user);
+
+    if (assigneeId) {
+      const assignee = await this.taskRepository.getUser(assigneeId);
+      if (!assignee) { throw new NotFoundException(`User with ID "${assigneeId}" not found`); }
+      task.assigneeId = +assigneeId ?? task.assigneeId;
+    }
+
     task.title = title ?? task.title;
     task.description = description ?? task.description;
     task.status = status ?? task.status;
@@ -76,6 +83,21 @@ export class TasksService {
     const { status } = updateTaskDto;
     const task = await this.getTaskById(id, user);
     task.status = status ?? task.status;
+
+    await task.save();
+    return task;
+  }
+
+  async updateAssignee(
+    id: number,
+    res: any,
+    user: User,
+  ): Promise<Task> {
+    const task = await this.getTaskById(id, user);
+    const assigneeId = res.assigneeId;
+    const assignee = await this.taskRepository.getUser(assigneeId);
+    if (!assignee) { throw new NotFoundException(`User with ID "${assigneeId}" not found`); }
+    task.assigneeId = +assigneeId ?? task.assigneeId;
 
     await task.save();
     return task;

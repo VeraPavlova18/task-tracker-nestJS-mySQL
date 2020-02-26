@@ -1,4 +1,4 @@
-import { EntityRepository, Repository } from 'typeorm';
+import { EntityRepository, Repository, getConnection } from 'typeorm';
 import { User } from '../auth/user.entity';
 import { Logger, InternalServerErrorException } from '@nestjs/common';
 import * as moment from 'moment';
@@ -25,14 +25,13 @@ export class TaskRepository extends Repository<Task> {
     task.description = description;
     task.status = TaskStatus.VIEW;
     task.createdAt = moment().toDate();
-    task.owner = user;
+    task.ownerId = user.id;
 
     try {
       await task.save();
     } catch (error) {
       throw new InternalServerErrorException();
     }
-    delete task.owner;
     return task;
   }
 
@@ -64,6 +63,15 @@ export class TaskRepository extends Repository<Task> {
       );
       throw new InternalServerErrorException();
     }
+  }
+
+  async getUser(id: number): Promise<User> {
+    return await getConnection()
+      .createQueryBuilder()
+      .select('user')
+      .from(User, 'user')
+      .where('user.id = :id', { id })
+      .getOne();
   }
 
 }

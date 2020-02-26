@@ -62,6 +62,16 @@ export class TasksController {
     return this.tasksService.updateTask(id, updateTaskDto, user);
   }
 
+  @Patch(':id/assignee')
+  @UsePipes(ValidationPipe)
+  updateAssignee(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() res: any,
+    @GetUser() user: User,
+  ): Promise<Task> {
+    return this.tasksService.updateAssignee(id, res, user);
+  }
+
   @Patch(':id/update-status')
   @UsePipes(ValidationPipe)
   updateStatus(

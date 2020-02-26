@@ -13,4 +13,8 @@ export class UpdateTaskDto {
   @IsOptional()
   @IsIn([TaskStatus.VIEW, TaskStatus.IN_PROGRESS, TaskStatus.DONE])
   status: TaskStatus;
+
+  @IsOptional()
+  @IsNotEmpty()
+  assigneeId: number;
 }
