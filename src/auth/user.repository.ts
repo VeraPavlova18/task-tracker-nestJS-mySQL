@@ -2,7 +2,9 @@ import { EntityRepository, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
-import { InternalServerErrorException, ConflictException } from '@nestjs/common';
+import { InternalServerErrorException, ConflictException, UnauthorizedException } from '@nestjs/common';
+import { SignInCredentialsDto } from './dto/signIn-credential.dto';
+import { JwtPayload } from './jwt-payload.interface';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -40,4 +42,18 @@ export class UserRepository extends Repository<User> {
       }
     }
   }
+
+  async validateUserPassword(
+    signInCredentialsDto: SignInCredentialsDto,
+  ): Promise<string> {
+    const { email, password } = signInCredentialsDto;
+    const user = await this.findOne({ email });
+
+    if (user && (await user.validatePassword(password))) {
+      return user.email;
+    } else {
+      return null;
+    }
+  }
+
 }
