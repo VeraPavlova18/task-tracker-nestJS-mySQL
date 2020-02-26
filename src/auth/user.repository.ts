@@ -10,7 +10,7 @@ import { GetUsersFilterDto } from './dto/get-users-filter.dto';
 export class UserRepository extends Repository<User> {
   private logger = new Logger('UserRepository');
 
-  private async hashPassword(password: string, salt: string): Promise<string> {
+  async hashPassword(password: string, salt: string): Promise<string> {
     return bcrypt.hash(password, salt);
   }
 
