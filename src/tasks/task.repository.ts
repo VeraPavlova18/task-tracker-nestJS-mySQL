@@ -5,6 +5,7 @@ import * as moment from 'moment';
 import { Task } from './task.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { TaskStatus } from './task-status.enum';
+import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
 
 @EntityRepository(Task)
 export class TaskRepository extends Repository<Task> {
@@ -29,14 +30,40 @@ export class TaskRepository extends Repository<Task> {
     try {
       await task.save();
     } catch (error) {
-      this.logger.error(
-        `Failed to create a task for user ${user.email}. Data: ${createTaskDto}`,
-        error.stack,
-      );
       throw new InternalServerErrorException();
     }
     delete task.owner;
     return task;
+  }
+
+  async getTasks(filterDto: GetTasksFilterDto, user: User): Promise<Task[]> {
+    const { status, search, take = 10, skip = 0 } = filterDto;
+    const query = this.createQueryBuilder('task');
+
+    if (status) {
+      query.andWhere('task.status = :status', { status });
+    }
+    if (search) {
+      query.andWhere(
+        '(task.title LIKE :search OR task.description LIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+    try {
+      return await query
+        .take(Math.abs(+take))
+        .skip(Math.abs(+skip))
+        .orderBy('task.id', 'DESC')
+        .getMany();
+    } catch (error) {
+      this.logger.error(
+        `Failed to get tasks for user "${user.email}". Filters: ${JSON.stringify(
+          filterDto,
+        )}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
+    }
   }
 
 }

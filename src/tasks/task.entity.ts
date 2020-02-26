@@ -4,10 +4,10 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  Unique,
 } from 'typeorm';
 import { User } from '../auth/user.entity';
 import { TaskStatus } from './task-status.enum';
-import { Exclude } from 'class-transformer';
 
 @Entity()
 export class Task extends BaseEntity {
