@@ -1,4 +1,4 @@
-import { Controller, Post, Body, ValidationPipe, UseInterceptors, ClassSerializerInterceptor } from '@nestjs/common';
+import { Controller, Post, Body, ValidationPipe, UseInterceptors, ClassSerializerInterceptor, Logger } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
 import { User } from './user.entity';
@@ -6,6 +6,7 @@ import { SignInCredentialsDto } from './dto/signIn-credential.dto';
 
 @Controller('auth')
 export class AuthController {
+  private logger = new Logger('UsersController');
   constructor(private authService: AuthService) {}
 
   @Post('/signup')

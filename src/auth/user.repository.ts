@@ -2,11 +2,13 @@ import { EntityRepository, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './user.entity';
 import { AuthCredentialsDto } from './dto/auth-credentials.dto';
-import { InternalServerErrorException } from '@nestjs/common';
+import { InternalServerErrorException, Logger } from '@nestjs/common';
 import { SignInCredentialsDto } from './dto/signIn-credential.dto';
+import { GetUsersFilterDto } from './dto/get-users-filter.dto';
 
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
+  private logger = new Logger('UserRepository');
 
   private async hashPassword(password: string, salt: string): Promise<string> {
     return bcrypt.hash(password, salt);
@@ -48,6 +50,33 @@ export class UserRepository extends Repository<User> {
       return user.email;
     } else {
       return null;
+    }
+  }
+
+  async getUsers(filterDto: GetUsersFilterDto, user: User): Promise<User[]> {
+    const { search, take = 10, skip = 0 } = filterDto;
+    const query = this.createQueryBuilder('user');
+
+    if (search) {
+      query.andWhere(
+        '(user.firstName LIKE :search OR user.lastName LIKE :search OR user.email LIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+    try {
+      return await query
+        .take(Math.abs(+take))
+        .skip(Math.abs(+skip))
+        .orderBy('user.id', 'DESC')
+        .getMany();
+    } catch (error) {
+      this.logger.error(
+        `Failed to get users for user "${user.email}". Filters: ${JSON.stringify(
+          filterDto,
+        )}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException();
     }
   }
 
